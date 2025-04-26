@@ -384,9 +384,9 @@ private final class FetchImpl {
             }
             
             if isStory {
-                self.defaultPartSize = 512 * 1024
+                self.defaultPartSize = getCGDownloadPartSize(512 * 1024, fileSize: self.size)
             } else {
-                self.defaultPartSize = 128 * 1024
+                self.defaultPartSize = getCGDownloadPartSize(128 * 1024, fileSize: self.size)
             }
             self.cdnPartSize = 128 * 1024
             
@@ -436,7 +436,7 @@ private final class FetchImpl {
                     maxPartSize: 1 * 1024 * 1024,
                     partAlignment: 4 * 1024,
                     partDivision: 1 * 1024 * 1024,
-                    maxPendingParts: 6,
+                    maxPendingParts: getCGMaxPendingParts(6),
                     decryptionState: decryptionState
                 ))
             }
@@ -692,7 +692,7 @@ private final class FetchImpl {
                             maxPartSize: self.cdnPartSize * 2,
                             partAlignment: self.cdnPartSize,
                             partDivision: 1 * 1024 * 1024,
-                            maxPendingParts: 6,
+                            maxPendingParts: getCGMaxPendingParts(6),
                             decryptionState: nil
                         ))
                         self.update()
@@ -741,7 +741,7 @@ private final class FetchImpl {
                                 maxPartSize: self.defaultPartSize,
                                 partAlignment: 4 * 1024,
                                 partDivision: 1 * 1024 * 1024,
-                                maxPendingParts: 6,
+                                maxPendingParts: getCGMaxPendingParts(6),
                                 decryptionState: nil
                             ))
                             
@@ -927,7 +927,7 @@ private final class FetchImpl {
                             maxPartSize: self.cdnPartSize * 2,
                             partAlignment: self.cdnPartSize,
                             partDivision: 1 * 1024 * 1024,
-                            maxPendingParts: 6,
+                            maxPendingParts: getCGMaxPendingParts(6),
                             decryptionState: nil
                         ))
                     case let .cdnRefresh(cdnData, refreshToken):
@@ -1160,4 +1160,17 @@ func multipartFetchV2(
             })
         }
     }
+}
+
+public func getCGDownloadPartSize(_ default: Int64, fileSize: Int64?) -> Int64 {
+    // Increasing chunk size for small files make it worse in terms of overall download performance
+    let smallFileSizeThreshold = 1 * 1024 * 1024 // 1 MB
+    if let fileSize, fileSize <= smallFileSizeThreshold {
+        return `default`
+    }
+    return 1024 * 1024
+}
+
+public func getCGMaxPendingParts(_ default: Int) -> Int {
+    return 12
 }

@@ -1935,7 +1935,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                 }
                 
                 
-                var isPremium = false
+                var isPremium = true // false
                 if case let .user(user) = accountPeer, user.isPremium {
                     isPremium = true
                 }

@@ -1735,7 +1735,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                 }
             }
             
-            var avatarDiameter = min(60.0, floor(item.presentationData.fontSize.baseDisplaySize * 60.0 / 17.0))
+            var avatarDiameter = min(60.0, floor(item.presentationData.fontSize.baseDisplaySize * 60.0 / 17.0)) / 1.2
             
             if case let .peer(peerData) = item.content, let customMessageListData = peerData.customMessageListData, customMessageListData.commandPrefix != nil {
                 avatarDiameter = 40.0
@@ -2201,7 +2201,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
             let enableChatListPhotos = true
             
             // if changed, adjust setupItem accordingly
-            var avatarDiameter = min(60.0, floor(item.presentationData.fontSize.baseDisplaySize * 60.0 / 17.0))
+            var avatarDiameter = min(60.0, floor(item.presentationData.fontSize.baseDisplaySize * 60.0 / 17.0)) / 1.2
             let avatarLeftInset: CGFloat
             
             if case let .peer(peerData) = item.content, let customMessageListData = peerData.customMessageListData, customMessageListData.commandPrefix != nil {
@@ -2439,9 +2439,9 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                     } else if let message = messages.last {
                         var composedString: NSMutableAttributedString
                         
-                        if let peerText = peerText {
-                            authorAttributedString = NSAttributedString(string: peerText, font: textFont, textColor: theme.authorNameColor)
-                        }
+//                        if let peerText = peerText {
+//                            authorAttributedString = NSAttributedString(string: peerText, font: textFont, textColor: theme.authorNameColor)
+//                        }
                         
                         var entities = (message._asMessage().textEntitiesAttribute?.entities ?? []).filter { entity in
                             switch entity.type {
@@ -2774,16 +2774,16 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                     } else {
                         attributedText = NSAttributedString(string: messageText, font: textFont, textColor: theme.messageTextColor)
                         
-                        var peerText: String?
+//                        var peerText: String?
                         if case .groupReference = item.content {
                             if let messagePeer = itemPeer.chatMainPeer {
                                 peerText = messagePeer.displayTitle(strings: item.presentationData.strings, displayOrder: item.presentationData.nameDisplayOrder)
                             }
                         }
                         
-                        if let peerText = peerText {
-                            authorAttributedString = NSAttributedString(string: peerText, font: textFont, textColor: theme.authorNameColor)
-                        }
+//                        if let peerText = peerText {
+//                            authorAttributedString = NSAttributedString(string: peerText, font: textFont, textColor: theme.authorNameColor)
+//                        }
                     }
                 case let .group(peers):
                     let textString = NSMutableAttributedString(string: "")
@@ -3325,12 +3325,12 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                 textMaxWidth -= 18.0
             }
             
-            let (textLayout, textApply) = textLayout(TextNodeLayoutArguments(attributedString: textAttributedString, backgroundColor: nil, maximumNumberOfLines: (authorAttributedString == nil && itemTags.isEmpty) ? 2 : 1, truncationType: .end, constrainedSize: CGSize(width: textMaxWidth, height: CGFloat.greatestFiniteMagnitude), alignment: .natural, cutout: textCutout, insets: UIEdgeInsets(top: 2.0, left: 1.0, bottom: 2.0, right: 1.0)))
+            let (textLayout, textApply) = textLayout(TextNodeLayoutArguments(attributedString: textAttributedString, backgroundColor: nil, maximumNumberOfLines: 1 /* (authorAttributedString == nil && itemTags.isEmpty) ? 2 : 1 */, truncationType: .end, constrainedSize: CGSize(width: textMaxWidth, height: CGFloat.greatestFiniteMagnitude), alignment: .natural, cutout: textCutout, insets: UIEdgeInsets(top: 2.0, left: 1.0, bottom: 2.0, right: 1.0)))
             
             let maxTitleLines: Int
             switch item.index {
             case .forum:
-                maxTitleLines = 2
+                maxTitleLines = 1 // 2 这里应该是标题最大行数，改不改无所谓
             case .chatList:
                 maxTitleLines = 1
             }
@@ -3493,6 +3493,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
             
             let titleSpacing: CGFloat = -1.0
             let authorSpacing: CGFloat = -3.0
+            // item 高度
             var itemHeight: CGFloat = 8.0 * 2.0 + 1.0
             itemHeight -= 21.0
             if case let .peer(peerData) = item.content, let customMessageListData = peerData.customMessageListData, customMessageListData.commandPrefix != nil {
@@ -4105,12 +4106,33 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                         secretIconNode.removeFromSupernode()
                     }
                     
+                    let verticalCenter: CGFloat
+                    if hasDraft /* authorAttributedString != nil */ /* effectiveAuthorTitle != nil || !forumThreads.isEmpty */ {
+                        verticalCenter = 0 // 有作者信息时保持原布局
+                    } else {
+                        verticalCenter = (contentRect.height - (titleLayout.size.height + textLayout.size.height)) / 2.0
+                    }
+                    
                     let contentDelta = CGPoint(x: contentRect.origin.x - (strongSelf.titleNode.frame.minX - titleOffset), y: contentRect.origin.y - (strongSelf.titleNode.frame.minY - UIScreenPixel))
-                    let titleFrame = CGRect(origin: CGPoint(x: contentRect.origin.x + titleOffset, y: contentRect.origin.y + UIScreenPixel), size: titleLayout.size)
+//                    let titleFrame = CGRect(origin: CGPoint(x: contentRect.origin.x + titleOffset, y: contentRect.origin.y + UIScreenPixel), size: titleLayout.size)
+                    let titleFrame = CGRect(
+                        origin: CGPoint(
+                            x: contentRect.origin.x + titleOffset,
+                            y: contentRect.minY + verticalCenter
+                        ),
+                        size: titleLayout.size
+                    )
                     strongSelf.titleNode.frame = titleFrame
                     let authorNodeFrame = CGRect(origin: CGPoint(x: contentRect.origin.x - 1.0, y: contentRect.minY + titleLayout.size.height), size: authorLayout)
                     strongSelf.authorNode.frame = authorNodeFrame
-                    let textNodeFrame = CGRect(origin: CGPoint(x: contentRect.origin.x - 1.0, y: contentRect.minY + titleLayout.size.height - 1.0 + UIScreenPixel + (authorLayout.height.isZero ? 0.0 : (authorLayout.height - 3.0))), size: textLayout.size)
+//                    let textNodeFrame = CGRect(origin: CGPoint(x: contentRect.origin.x - 1.0, y: contentRect.minY + titleLayout.size.height - 1.0 + UIScreenPixel + (authorLayout.height.isZero ? 0.0 : (authorLayout.height - 3.0))), size: textLayout.size)
+                    let textNodeFrame = CGRect(
+                        origin: CGPoint(
+                            x: contentRect.origin.x - 1.0,
+                            y: hasDraft ? contentRect.minY + titleLayout.size.height - 1.0 + UIScreenPixel + (authorLayout.height.isZero ? 0.0 : (authorLayout.height - 3.0)) : titleFrame.maxY + verticalCenter
+                        ),
+                        size: textLayout.size
+                    )
                     
                     if let topForumTopicRect, !isSearching {
                         let compoundHighlightingNode: LinkHighlightingNode

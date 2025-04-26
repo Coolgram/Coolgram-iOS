@@ -5309,6 +5309,18 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                 } else {
                     items.append(DeleteChatPeerActionSheetItem(context: strongSelf.context, peer: mainPeer, chatPeer: chatPeer, action: .delete, strings: strongSelf.presentationData.strings, nameDisplayOrder: strongSelf.presentationData.nameDisplayOrder))
                     
+                    // 判断是否为机器人
+                    if case let .user(user) = chatPeer, user.botInfo != nil {
+                        // 增加 删除机器人 选项
+                        items.append(ActionSheetButtonItem(title:
+                            strongSelf.presentationData.strings.DialogList_DeleteBotConfirmation, color: .destructive, action: {
+                            [weak actionSheet] in
+                            actionSheet?.dismissAnimated()
+                            
+                            self?.schedulePeerChatRemoval(peer: peer, type: .forEveryone, deleteGloballyIfPossible: true, completion: {})
+                        }))
+                    }
+                    
                     if canStop {
                         items.append(ActionSheetButtonItem(title: strongSelf.presentationData.strings.DialogList_DeleteBotConversationConfirmation, color: .destructive, action: { [weak actionSheet] in
                             actionSheet?.dismissAnimated()

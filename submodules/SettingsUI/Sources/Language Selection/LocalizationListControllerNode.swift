@@ -447,7 +447,7 @@ final class LocalizationListControllerNode: ViewControllerTracingNode {
                 return
             }
             
-            let isPremium = peer?.isPremium ?? false
+            let isPremium = true // peer?.isPremium ?? false
                         
             var entries: [LanguageListEntry] = []
             var activeLanguageCode: String?

@@ -685,7 +685,7 @@ extension ChatControllerImpl {
                     if counterAndTimestamp.0 >= 3 {
                         maybeSuggestPremium = true
                     }
-                    if (isPremium || maybeSuggestPremium) && !isHidden {
+                    if (isPremium || maybeSuggestPremium || true) && !isHidden {
                         return chatTranslationState(context: context, peerId: peerId)
                         |> map { translationState -> ChatPresentationTranslationState? in
                             if let translationState, !translationState.fromLang.isEmpty && (translationState.fromLang != baseLanguageCode || translationState.isEnabled) {
